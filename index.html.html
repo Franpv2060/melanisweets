@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melani Sweets - Sistema de Gestión de Repostería</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff5f7',
+                            100: '#fed7e2',
+                            200: '#fbb6ce',
+                            300: '#f687b3',
+                            400: '#ed64a6',
+                            500: '#d53f8c',
+                            600: '#b83280',
+                            700: '#97266d',
+                            cream: '#fdfbf7',
+                            choco: '#4a2c2a',
+                            gold: '#d4af37',
+                            goldlight: '#f9f3dd',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        cursive: ['"Dancing Script"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #faf6f0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .bg-pattern {
+            background-image: radial-gradient(#fbb6ce 0.75px, transparent 0.75px), radial-gradient(#fbb6ce 0.75px, #faf6f0 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            background-opacity: 0.15;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #f687b3;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-pattern min-h-screen text-slate-800 flex flex-col md:flex-row">
+
+    <!-- Toast Notifications Area -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-full md:w-64 bg-white border-r border-rose-100 flex-shrink-0 shadow-lg flex flex-col justify-between">
+        <div>
+            <!-- Logo Section -->
+            <div class="p-6 text-center border-b border-rose-100 bg-gradient-to-b from-rose-50 to-white">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-rose-100 text-rose-500 shadow-inner mb-2">
+                    <i class="fa-solid font-bold text-3xl fa-cake-candles"></i>
+                </div>
+                <h1 class="font-cursive text-3xl text-brand-choco font-bold tracking-wide">Melani Sweets</h1>
+                <p class="text-xs text-rose-400 font-medium tracking-wider uppercase mt-1">Gestión & Escandallo</p>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5" id="mainNav">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-xl text-rose-600 bg-rose-50 transition-all shadow-sm">
+                    <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+                </button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                    <i class="fa-solid fa-boxes-packing w-5"></i> Materias Primas
+                </button>
+                <button onclick="switchTab('recipes')" id="nav-recipes" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                    <i class="fa-solid fa-book-open-reader w-5"></i> Recetas (Escandallo)
+                </button>
+                <button onclick="switchTab('sales')" id="nav-sales" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                    <i class="fa-solid fa-cash-register w-5"></i> Producción y Ventas
+                </button>
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                    <i class="fa-solid fa-wand-magic-sparkles w-5"></i> Predicción IA & Stock
+                </button>
+            </nav>
+        </div>
+
+        <!-- System Reset / Footer -->
+        <div class="p-4 border-t border-rose-100 bg-rose-50/50">
+            <button onclick="resetDataToDefault()" class="w-full text-xs text-rose-500 hover:text-rose-700 font-medium py-2 px-3 rounded-lg border border-rose-200 hover:bg-rose-100 transition-colors flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-left"></i> Restablecer Datos de Prueba
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto max-h-screen custom-scrollbar">
+
+        <!-- 1. DASHBOARD TAB -->
+        <section id="tab-dashboard" class="tab-content space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Resumen General</h2>
+                    <p class="text-slate-500 text-sm">Control rápido de métricas, inventario y recetas principales.</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100">
+                    <i class="fa-solid fa-calendar-day text-rose-400"></i>
+                    <span id="currentDateText" class="text-sm font-medium text-slate-600">--</span>
+                </div>
+            </header>
+
+            <!-- Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase font-semibold text-slate-400">Insumos Registrados</p>
+                        <h3 id="statTotalItems" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        <p class="text-xs text-rose-500 mt-1"><i class="fa-solid fa-cubes"></i> Materias primas</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase font-semibold text-slate-400">Valor del Inventario</p>
+                        <h3 id="statTotalValue" class="text-2xl font-bold text-slate-800 mt-1">$0.00</h3>
+                        <p class="text-xs text-emerald-500 mt-1"><i class="fa-solid fa-vault"></i> Inversión en stock</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase font-semibold text-slate-400">Alertas de Stock</p>
+                        <h3 id="statLowStockCount" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                        <p class="text-xs text-rose-400 mt-1"><i class="fa-solid fa-triangle-exclamation"></i> Por debajo del mínimo</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs uppercase font-semibold text-slate-400">Recetas Creadas</p>
+                        <h3 id="statTotalRecipes" class="text-2xl font-bold text-slate-800 mt-1">0</h3>
+                        <p class="text-xs text-brand-500 mt-1"><i class="fa-solid fa-utensils"></i> Productos en catálogo</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-500 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-book-journal-whills"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Stock Bar Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-rose-400"></i> Niveles de Stock Actual (Materia Prima)
+                    </h3>
+                    <div class="relative h-64">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Sales Doughnut Chart -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-brand-500"></i> Distribución de Ventas por Producto
+                    </h3>
+                    <div class="relative h-64 flex items-center justify-center">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stock Alerts List -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100">
+                <h3 class="text-md font-bold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Insumos con Stock Bajo o Crítico
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-rose-50/60 text-slate-600 uppercase text-xs">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Ingrediente</th>
+                                <th class="p-3">Stock Actual</th>
+                                <th class="p-3">Mínimo Requerido</th>
+                                <th class="p-3">Estado</th>
+                                <th class="p-3 text-right rounded-r-lg">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardAlertsTable" class="divide-y divide-slate-100">
+                            <!-- Injected JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 2. INVENTORY TAB -->
+        <section id="tab-inventory" class="tab-content hidden space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Gestión de Materias Primas</h2>
+                    <p class="text-slate-500 text-sm">Registra y controla el inventario de insumos para repostería.</p>
+                </div>
+                <button onclick="openIngredientModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Nuevo Ingrediente
+                </button>
+            </header>
+
+            <!-- Search & Filters -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-100 flex flex-col sm:flex-row gap-3 justify-between">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                    <input type="text" id="inventorySearch" oninput="renderInventory()" placeholder="Buscar ingrediente o proveedor..." class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-400">
+                </div>
+                <div class="flex gap-2">
+                    <select id="inventoryFilter" onchange="renderInventory()" class="text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:outline-none focus:border-rose-400">
+                        <option value="all">Todos los Insumos</option>
+                        <option value="low">Solo Alerta Stock Bajo</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-rose-50/70 text-slate-700 font-semibold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Ingrediente</th>
+                                <th class="p-4">Stock Actual</th>
+                                <th class="p-4">Stock Mín.</th>
+                                <th class="p-4">Costo / Unidad</th>
+                                <th class="p-4">Proveedor</th>
+                                <th class="p-4 text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody" class="divide-y divide-slate-100">
+                            <!-- Injected JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 3. RECIPES TAB -->
+        <section id="tab-recipes" class="tab-content hidden space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Recetas y Escandallo de Costos</h2>
+                    <p class="text-slate-500 text-sm">Diseña postres, vincula ingredientes y determina tu precio de venta con precisión.</p>
+                </div>
+                <button onclick="openRecipeModal()" class="bg-rose-500 hover:bg-rose-600 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-utensils"></i> Crear Nueva Receta
+                </button>
+            </header>
+
+            <!-- Recipes Grid -->
+            <div id="recipesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected JS -->
+            </div>
+        </section>
+
+
+        <!-- 4. SALES & PRODUCTION TAB -->
+        <section id="tab-sales" class="tab-content hidden space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Producción y Ventas</h2>
+                    <p class="text-slate-500 text-sm">Registra la salida de postres y descuenta automáticamente las materias primas.</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Sale Form -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-rose-100 h-fit space-y-4">
+                    <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-cart-plus text-rose-500"></i> Registrar Nueva Venta
+                    </h3>
+
+                    <form id="salesForm" onsubmit="handleRegisterSale(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Seleccionar Receta / Producto</label>
+                            <select id="saleRecipeSelect" onchange="updateSalePreview()" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                                <option value="">-- Selecciona un postre --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Cantidad Vendida (Unidades)</label>
+                            <input type="number" id="saleQuantity" min="1" value="1" oninput="updateSalePreview()" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                        </div>
+
+                        <!-- Price Preview -->
+                        <div class="bg-rose-50/60 p-4 rounded-xl border border-rose-100 space-y-2">
+                            <div class="flex justify-between text-xs text-slate-600">
+                                <span>Costo Producción Total:</span>
+                                <span id="saleCostPreview" class="font-medium text-slate-800">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm font-bold text-rose-600">
+                                <span>Precio de Venta Total:</span>
+                                <span id="salePricePreview">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-xs text-emerald-600 font-medium">
+                                <span>Ganancia Estimada:</span>
+                                <span id="saleProfitPreview">$0.00</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check"></i> Descontar Stock & Confirmar
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Sales History Table -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-rose-100 space-y-4">
+                    <h3 class="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-brand-500"></i> Histórico de Ventas Realizadas
+                    </h3>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
+                                <tr>
+                                    <th class="p-3 rounded-l-lg">Fecha</th>
+                                    <th class="p-3">Receta</th>
+                                    <th class="p-3">Cant.</th>
+                                    <th class="p-3">Costo Prod.</th>
+                                    <th class="p-3">Precio Venta</th>
+                                    <th class="p-3 text-right rounded-r-lg">Ganancia</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesHistoryTable" class="divide-y divide-slate-100">
+                                <!-- Injected JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- 5. ANALYTICS & AI PREDICTIONS TAB -->
+        <section id="tab-analytics" class="tab-content hidden space-y-6">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">Predicción de Stock & Sugerencias de Compra</h2>
+                    <p class="text-slate-500 text-sm">Motor analítico basado en el ritmo de producción actual para prevenir roturas de stock.</p>
+                </div>
+                <button onclick="runAIPredictions()" class="bg-brand-500 hover:bg-brand-600 text-white font-medium px-4 py-2.5 rounded-xl shadow-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate text-xs"></i> Actualizar Análisis
+                </button>
+            </header>
+
+            <!-- AI Summary Cards -->
+            <div id="aiSummaryBanner" class="bg-gradient-to-r from-brand-500 to-rose-500 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="space-y-1 text-center md:text-left">
+                    <span class="bg-white/20 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold">Análisis Predictivo Activado</span>
+                    <h3 class="text-xl font-bold">Estado del Almacén Melani Sweets</h3>
+                    <p id="aiSummaryText" class="text-sm text-rose-100">Calculando proyección de insumos en base al historial...</p>
+                </div>
+                <div class="flex items-center gap-3 bg-white/10 backdrop-blur-md px-5 py-3 rounded-xl border border-white/20">
+                    <i class="fa-solid fa-brain text-2xl text-amber-200"></i>
+                    <div>
+                        <div class="text-xs text-rose-100">Nivel de Cobertura</div>
+                        <div id="aiHealthScore" class="text-lg font-bold">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictions Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-rose-100 p-6 space-y-4">
+                <h3 class="text-md font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half text-amber-500"></i> Días de Autonomía por Materia Prima
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-rose-50/60 text-slate-700 uppercase text-xs">
+                            <tr>
+                                <th class="p-3">Ingrediente</th>
+                                <th class="p-3">Stock Disponible</th>
+                                <th class="p-3">Consumo Prom. / Venta</th>
+                                <th class="p-3">Días Est. Restantes</th>
+                                <th class="p-3">Prioridad Compra</th>
+                                <th class="p-3 text-right">Sugerencia Pedido</th>
+                            </tr>
+                        </thead>
+                        <tbody id="aiPredictionTable" class="divide-y divide-slate-100">
+                            <!-- Injected JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- INGREDIENT MODAL -->
+    <div id="ingredientModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div class="bg-rose-50 px-6 py-4 border-b border-rose-100 flex justify-between items-center">
+                <h3 id="ingredientModalTitle" class="font-bold text-slate-800">Agregar Ingrediente</h3>
+                <button onclick="closeIngredientModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="ingredientForm" onsubmit="saveIngredient(event)" class="p-6 space-y-4">
+                <input type="hidden" id="ingId">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nombre del Ingrediente</label>
+                    <input type="text" id="ingName" required placeholder="Ej. Harina de Trigo" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Unidad de Medida</label>
+                        <select id="ingUnit" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                            <option value="g">Gramos (g)</option>
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="ml">Mililitros (ml)</option>
+                            <option value="L">Litros (L)</option>
+                            <option value="unidades">Unidades</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Costo Unitario ($)</label>
+                        <input type="number" step="0.0001" id="ingCost" required placeholder="0.00" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Stock Actual</label>
+                        <input type="number" step="0.01" id="ingStock" required placeholder="0" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Stock Mínimo (Alerta)</label>
+                        <input type="number" step="0.01" id="ingMin" required placeholder="0" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Proveedor</label>
+                    <input type="text" id="ingSupplier" placeholder="Ej. Distribuidora San José" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeIngredientModal()" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-rose-500 hover:bg-rose-600 rounded-xl shadow-sm">Guardar Ingrediente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- QUICK RESTOCK MODAL -->
+    <div id="restockModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800">Reabastecer Ingrediente</h3>
+                <button onclick="closeRestockModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="restockForm" onsubmit="saveRestock(event)" class="p-6 space-y-4">
+                <input type="hidden" id="restockIngId">
+                <p class="text-sm text-slate-600">Sumar cantidad al stock actual de <span id="restockIngName" class="font-bold text-slate-800"></span>.</p>
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Cantidad a Añadir</label>
+                    <input type="number" step="0.01" id="restockAmount" required min="0.01" placeholder="Ej. 500" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-emerald-400">
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeRestockModal()" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-xl">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-emerald-500 hover:bg-emerald-600 rounded-xl shadow-sm">Añadir al Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RECIPE MODAL -->
+    <div id="recipeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="bg-rose-50 px-6 py-4 border-b border-rose-100 flex justify-between items-center">
+                <h3 id="recipeModalTitle" class="font-bold text-slate-800">Crear Receta (Escandallo)</h3>
+                <button onclick="closeRecipeModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="recipeForm" onsubmit="saveRecipe(event)" class="p-6 overflow-y-auto space-y-4 custom-scrollbar flex-1">
+                <input type="hidden" id="recipeId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Nombre de la Receta / Postre</label>
+                        <input type="text" id="recipeName" required placeholder="Ej. Torta de Chocolate 1kg" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">Categoría</label>
+                        <select id="recipeCategory" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:border-rose-400">
+                            <option value="Tortas">Tortas y Pasteles</option>
+                            <option value="Cupcakes">Cupcakes & Muffins</option>
+                            <option value="Galletas">Galletas</option>
+                            <option value="Postres Fríos">Postres Fríos</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Ingredients Section -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-semibold uppercase text-slate-500">Ingredientes de la Receta</label>
+                        <button type="button" onclick="addRecipeIngredientRow()" class="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> Añadir Ingrediente
+                        </button>
+                    </div>
+                    
+                    <div id="recipeIngredientsRows" class="space-y-2">
+                        <!-- Dynamic rows injected JS -->
+                    </div>
+                </div>
+
+                <!-- Margin & Price Calculation Box -->
+                <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-100 space-y-3">
+                    <div class="flex justify-between items-center text-sm font-semibold text-slate-700">
+                        <span>Costo Total de Producción:</span>
+                        <span id="recipeTotalCost" class="text-lg text-rose-600 font-bold">$0.00</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-rose-200/60">
+                        <div>
+                            <div class="flex justify-between text-xs font-medium text-slate-600 mb-1">
+                                <span>Margen de Ganancia:</span>
+                                <span id="marginValueText" class="font-bold text-brand-600">100%</span>
+                            </div>
+                            <input type="range" id="recipeMargin" min="10" max="300" value="100" step="5" oninput="calculateRecipeCostSummary()" class="w-full accent-rose-500">
+                        </div>
+
+                        <div>
+                            <span class="block text-xs font-medium text-slate-600 mb-1">Precio Sugerido de Venta:</span>
+                            <div id="recipeSuggestedPrice" class="text-xl font-extrabold text-emerald-600">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeRecipeModal()" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-xl">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm text-white bg-rose-500 hover:bg-rose-600 rounded-xl shadow-sm">Guardar Receta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- APPLICATION LOGIC & JAVASCRIPT -->
+    <script>
+        // --- INITIAL MOCK DATA ---
+        const DEFAULT_INGREDIENTS = [
+            { id: "ing-1", name: "Harina de Trigo", unit: "g", stock: 5000, minStock: 2000, cost: 0.0015, supplier: "Distribuidora San Juan" },
+            { id: "ing-2", name: "Azúcar Blanca", unit: "g", stock: 4000, minStock: 1500, cost: 0.0012, supplier: "Distribuidora San Juan" },
+            { id: "ing-3", name: "Mantequilla sin Sal", unit: "g", stock: 1200, minStock: 1000, cost: 0.0080, supplier: "Lácteos Los Andes" },
+            { id: "ing-4", name: "Cacao en Polvo", unit: "g", stock: 800, minStock: 500, cost: 0.0120, supplier: "Cacao Gourmet" },
+            { id: "ing-5", name: "Huevos", unit: "unidades", stock: 60, minStock: 24, cost: 0.1500, supplier: "Avícola El Valle" },
+            { id: "ing-6", name: "Leche Entera", unit: "ml", stock: 3000, minStock: 1000, cost: 0.0010, supplier: "Lácteos Los Andes" },
+            { id: "ing-7", name: "Esencia de Vainilla", unit: "ml", stock: 250, minStock: 100, cost: 0.0250, supplier: "Repostería Central" },
+            { id: "ing-8", name: "Polvo de Hornear", unit: "g", stock: 400, minStock: 150, cost: 0.0050, supplier: "Repostería Central" },
+            { id: "ing-9", name: "Queso Crema", unit: "g", stock: 900, minStock: 600, cost: 0.0095, supplier: "Lácteos Los Andes" }
+        ];
+
+        const DEFAULT_RECIPES = [
+            {
+                id: "rec-1",
+                name: "Torta de Chocolate (1kg)",
+                category: "Tortas",
+                margin: 100,
+                ingredients: [
+                    { ingredientId: "ing-1", amount: 400 },
+                    { ingredientId: "ing-2", amount: 350 },
+                    { ingredientId: "ing-3", amount: 200 },
+                    { ingredientId: "ing-4", amount: 120 },
+                    { ingredientId: "ing-5", amount: 4 },
+                    { ingredientId: "ing-6", amount: 250 },
+                    { ingredientId: "ing-7", amount: 10 },
+                    { ingredientId: "ing-8", amount: 15 }
+                ]
+            },
+            {
+                id: "rec-2",
+                name: "Cupcake Red Velvet (Docena)",
+                category: "Cupcakes",
+                margin: 120,
+                ingredients: [
+                    { ingredientId: "ing-1", amount: 300 },
+                    { ingredientId: "ing-2", amount: 250 },
+                    { ingredientId: "ing-3", amount: 150 },
+                    { ingredientId: "ing-4", amount: 25 },
+                    { ingredientId: "ing-5", amount: 2 },
+                    { ingredientId: "ing-6", amount: 150 },
+                    { ingredientId: "ing-9", amount: 200 }
+                ]
+            }
+        ];
+
+        const DEFAULT_SALES = [
+            {
+                id: "sale-1",
+                date: "2026-11-04 10:30",
+                recipeId: "rec-1",
+                recipeName: "Torta de Chocolate (1kg)",
+                quantity: 2,
+                totalCost: 10.42,
+                totalPrice: 20.84,
+                profit: 10.42
+            },
+            {
+                id: "sale-2",
+                date: "2026-11-05 14:15",
+                recipeId: "rec-2",
+                recipeName: "Cupcake Red Velvet (Docena)",
+                quantity: 1,
+                totalCost: 4.85,
+                totalPrice: 10.67,
+                profit: 5.82
+            }
+        ];
+
+        // --- STATE MANAGEMENT ---
+        let ingredients = [];
+        let recipes = [];
+        let sales = [];
+        let stockChartInstance = null;
+        let salesChartInstance = null;
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            loadState();
+            document.getElementById('currentDateText').innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            renderAll();
+        };
+
+        function loadState() {
+            const storedIng = localStorage.getItem('ms_ingredients');
+            const storedRec = localStorage.getItem('ms_recipes');
+            const storedSal = localStorage.getItem('ms_sales');
+
+            ingredients = storedIng ? JSON.parse(storedIng) : [...DEFAULT_INGREDIENTS];
+            recipes = storedRec ? JSON.parse(storedRec) : [...DEFAULT_RECIPES];
+            sales = storedSal ? JSON.parse(storedSal) : [...DEFAULT_SALES];
+
+            saveState();
+        }
+
+        function saveState() {
+            localStorage.setItem('ms_ingredients', JSON.stringify(ingredients));
+            localStorage.setItem('ms_recipes', JSON.stringify(recipes));
+            localStorage.setItem('ms_sales', JSON.stringify(sales));
+        }
+
+        function resetDataToDefault() {
+            if (confirm("¿Deseas restablecer todos los datos a la configuración inicial por defecto?")) {
+                ingredients = [...DEFAULT_INGREDIENTS];
+                recipes = [...DEFAULT_RECIPES];
+                sales = [...DEFAULT_SALES];
+                saveState();
+                renderAll();
+                showToast("Datos restablecidos con éxito", "info");
+            }
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('#mainNav button').forEach(btn => {
+                btn.classList.remove('bg-rose-50', 'text-rose-600', 'font-semibold');
+                btn.classList.add('text-slate-600', 'font-medium');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-rose-50', 'text-rose-600', 'font-semibold');
+                activeBtn.classList.remove('text-slate-600');
+            }
+
+            // Refresh tab specific views
+            if (tabId === 'dashboard') updateCharts();
+            if (tabId === 'analytics') runAIPredictions();
+            if (tabId === 'sales') updateSaleSelectOptions();
+        }
+
+        function renderAll() {
+            renderDashboard();
+            renderInventory();
+            renderRecipes();
+            renderSalesHistory();
+            updateSaleSelectOptions();
+            runAIPredictions();
+        }
+
+        // --- TOAST NOTIFICATIONS ---
+        function showToast(message, type = "success") {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgClass = type === 'success' ? 'bg-emerald-600' : type === 'danger' ? 'bg-rose-600' : 'bg-slate-800';
+            const icon = type === 'success' ? 'fa-circle-check' : type === 'danger' ? 'fa-triangle-exclamation' : 'fa-circle-info';
+
+            toast.className = `${bgClass} text-white text-sm px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transition-all duration-300 pointer-events-auto transform translate-x-10 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-10');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+
+        // --- 1. DASHBOARD CONTROLLER ---
+        function renderDashboard() {
+            // Metrics
+            document.getElementById('statTotalItems').innerText = ingredients.length;
+            
+            const totalVal = ingredients.reduce((sum, item) => sum + (item.stock * item.cost), 0);
+            document.getElementById('statTotalValue').innerText = `$${totalVal.toFixed(2)}`;
+
+            const lowStockItems = ingredients.filter(i => i.stock <= i.minStock);
+            document.getElementById('statLowStockCount').innerText = lowStockItems.length;
+
+            document.getElementById('statTotalRecipes').innerText = recipes.length;
+
+            // Alerts Table
+            const tbody = document.getElementById('dashboardAlertsTable');
+            tbody.innerHTML = '';
+
+            if (lowStockItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">No hay materias primas con stock crítico en este momento.</td></tr>`;
+            } else {
+                lowStockItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    const isZero = item.stock <= 0;
+                    row.innerHTML = `
+                        <td class="p-3 font-semibold text-slate-800">${item.name}</td>
+                        <td class="p-3 text-rose-600 font-bold">${item.stock} ${item.unit}</td>
+                        <td class="p-3 text-slate-500">${item.minStock} ${item.unit}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 text-xs rounded-full font-semibold ${isZero ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}">
+                                ${isZero ? 'Agotado' : 'Bajo Stock'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button onclick="openRestockModal('${item.id}')" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-3 py-1.5 rounded-lg shadow-sm">
+                                <i class="fa-solid fa-plus"></i> Reabastecer
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            // Stock Bar Chart
+            const stockCtx = document.getElementById('stockChart').getContext('2d');
+            if (stockChartInstance) stockChartInstance.destroy();
+
+            const labels = ingredients.map(i => i.name.length > 12 ? i.name.substring(0, 12) + '...' : i.name);
+            const dataStock = ingredients.map(i => i.stock);
+            const dataMin = ingredients.map(i => i.minStock);
+
+            stockChartInstance = new Chart(stockCtx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Stock Actual',
+                            data: dataStock,
+                            backgroundColor: '#f687b3',
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Punto de Alerta',
+                            data: dataMin,
+                            backgroundColor: '#e2e8f0',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            // Sales Pie Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            if (salesChartInstance) salesChartInstance.destroy();
+
+            const recipeSalesMap = {};
+            sales.forEach(s => {
+                recipeSalesMap[s.recipeName] = (recipeSalesMap[s.recipeName] || 0) + s.quantity;
+            });
+
+            const salesLabels = Object.keys(recipeSalesMap);
+            const salesData = Object.values(recipeSalesMap);
+
+            salesChartInstance = new Chart(salesCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: salesLabels.length > 0 ? salesLabels : ['Sin Ventas'],
+                    datasets: [{
+                        data: salesData.length > 0 ? salesData : [1],
+                        backgroundColor: ['#ed64a6', '#d4af37', '#b83280', '#4a2c2a', '#cbd5e1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+
+        // --- 2. INVENTORY CONTROLLER ---
+        function renderInventory() {
+            const tbody = document.getElementById('inventoryTableBody');
+            tbody.innerHTML = '';
+
+            const searchTerm = document.getElementById('inventorySearch').value.toLowerCase();
+            const filterVal = document.getElementById('inventoryFilter').value;
+
+            const filtered = ingredients.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchTerm) || (item.supplier && item.supplier.toLowerCase().includes(searchTerm));
+                const matchesFilter = filterVal === 'all' ? true : (item.stock <= item.minStock);
+                return matchesSearch && matchesFilter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">No se encontraron materias primas.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const isLow = item.stock <= item.minStock;
+                const totalCostVal = item.cost * item.stock;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-rose-50/30 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-semibold text-slate-800">
+                        ${item.name}
+                        ${isLow ? '<i class="fa-solid fa-triangle-exclamation text-amber-500 text-xs ml-1" title="Stock bajo"></i>' : ''}
+                    </td>
+                    <td class="p-4">
+                        <span class="font-bold ${isLow ? 'text-rose-600' : 'text-slate-700'}">${item.stock}</span>
+                        <span class="text-xs text-slate-400">${item.unit}</span>
+                    </td>
+                    <td class="p-4 text-slate-500">${item.minStock} ${item.unit}</td>
+                    <td class="p-4 text-slate-700 font-medium">$${item.cost.toFixed(4)} / ${item.unit}</td>
+                    <td class="p-4 text-slate-500 text-xs">${item.supplier || 'N/A'}</td>
+                    <td class="p-4 text-center space-x-1">
+                        <button onclick="openRestockModal('${item.id}')" title="Reabastecer" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg">
+                            <i class="fa-solid fa-plus-circle text-base"></i>
+                        </button>
+                        <button onclick="editIngredient('${item.id}')" title="Editar" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <i class="fa-solid fa-pen-to-square text-base"></i>
+                        </button>
+                        <button onclick="deleteIngredient('${item.id}')" title="Eliminar" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg">
+                            <i class="fa-solid fa-trash text-base"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openIngredientModal(editId = null) {
+            document.getElementById('ingredientForm').reset();
+            document.getElementById('ingId').value = '';
+            document.getElementById('ingredientModalTitle').innerText = editId ? "Editar Ingrediente" : "Agregar Ingrediente";
+
+            if (editId) {
+                const item = ingredients.find(i => i.id === editId);
+                if (item) {
+                    document.getElementById('ingId').value = item.id;
+                    document.getElementById('ingName').value = item.name;
+                    document.getElementById('ingUnit').value = item.unit;
+                    document.getElementById('ingCost').value = item.cost;
+                    document.getElementById('ingStock').value = item.stock;
+                    document.getElementById('ingMin').value = item.minStock;
+                    document.getElementById('ingSupplier').value = item.supplier || '';
+                }
+            }
+            document.getElementById('ingredientModal').classList.remove('hidden');
+        }
+
+        function closeIngredientModal() {
+            document.getElementById('ingredientModal').classList.add('hidden');
+        }
+
+        function saveIngredient(e) {
+            e.preventDefault();
+            const id = document.getElementById('ingId').value;
+            const name = document.getElementById('ingName').value.trim();
+            const unit = document.getElementById('ingUnit').value;
+            const cost = parseFloat(document.getElementById('ingCost').value);
+            const stock = parseFloat(document.getElementById('ingStock').value);
+            const minStock = parseFloat(document.getElementById('ingMin').value);
+            const supplier = document.getElementById('ingSupplier').value.trim();
+
+            if (id) {
+                // Edit
+                const index = ingredients.findIndex(i => i.id === id);
+                if (index !== -1) {
+                    ingredients[index] = { id, name, unit, cost, stock, minStock, supplier };
+                    showToast("Ingrediente actualizado correctamente");
+                }
+            } else {
+                // Create
+                const newIng = {
+                    id: 'ing-' + Date.now(),
+                    name, unit, cost, stock, minStock, supplier
+                };
+                ingredients.push(newIng);
+                showToast("Nuevo ingrediente añadido");
+            }
+
+            saveState();
+            closeIngredientModal();
+            renderAll();
+        }
+
+        function deleteIngredient(id) {
+            // Check if ingredient is used in recipes
+            const usedIn = recipes.filter(r => r.ingredients.some(ing => ing.ingredientId === id));
+            if (usedIn.length > 0) {
+                const recipeNames = usedIn.map(r => r.name).join(', ');
+                alert(`No se puede eliminar este ingrediente porque está asociado a las siguientes recetas: ${recipeNames}`);
+                return;
+            }
+
+            if (confirm("¿Seguro que deseas eliminar esta materia prima?")) {
+                ingredients = ingredients.filter(i => i.id !== id);
+                saveState();
+                renderAll();
+                showToast("Ingrediente eliminado", "danger");
+            }
+        }
+
+        function openRestockModal(id) {
+            const item = ingredients.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('restockIngId').value = item.id;
+            document.getElementById('restockIngName').innerText = `${item.name} (${item.unit})`;
+            document.getElementById('restockAmount').value = '';
+            document.getElementById('restockModal').classList.remove('hidden');
+        }
+
+        function closeRestockModal() {
+            document.getElementById('restockModal').classList.add('hidden');
+        }
+
+        function saveRestock(e) {
+            e.preventDefault();
+            const id = document.getElementById('restockIngId').value;
+            const amount = parseFloat(document.getElementById('restockAmount').value);
+
+            const item = ingredients.find(i => i.id === id);
+            if (item && amount > 0) {
+                item.stock += amount;
+                saveState();
+                closeRestockModal();
+                renderAll();
+                showToast(`Se añadieron ${amount} ${item.unit} a ${item.name}`);
+            }
+        }
+
+
+        // --- 3. RECIPES CONTROLLER (ESCANDALLO) ---
+        function calculateRecipeTotals(recipe) {
+            let totalCost = 0;
+            recipe.ingredients.forEach(item => {
+                const ing = ingredients.find(i => i.id === item.ingredientId);
+                if (ing) {
+                    totalCost += (ing.cost * item.amount);
+                }
+            });
+            const margin = recipe.margin || 100;
+            const suggestedPrice = totalCost * (1 + (margin / 100));
+            return { totalCost, suggestedPrice, margin };
+        }
+
+        function renderRecipes() {
+            const grid = document.getElementById('recipesGrid');
+            grid.innerHTML = '';
+
+            if (recipes.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-8 bg-white rounded-2xl text-center text-slate-400">No hay recetas registradas. Crea una para comenzar el escandallo.</div>`;
+                return;
+            }
+
+            recipes.forEach(recipe => {
+                const { totalCost, suggestedPrice, margin } = calculateRecipeTotals(recipe);
+
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow";
+                
+                let ingredientsListHtml = recipe.ingredients.map(ingRef => {
+                    const ing = ingredients.find(i => i.id === ingRef.ingredientId);
+                    if (!ing) return '';
+                    const costPart = ing.cost * ingRef.amount;
+                    return `
+                        <div class="flex justify-between text-xs py-1 border-b border-slate-50">
+                            <span class="text-slate-600">${ing.name} (${ingRef.amount} ${ing.unit})</span>
+                            <span class="font-medium text-slate-800">$${costPart.toFixed(2)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="p-5 space-y-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-rose-100 text-rose-600">${recipe.category || 'Repostería'}</span>
+                                <h3 class="text-lg font-bold text-slate-800 mt-1">${recipe.name}</h3>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400">Precio Sugerido</div>
+                                <div class="text-xl font-extrabold text-emerald-600">$${suggestedPrice.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-3 rounded-xl space-y-1">
+                            <div class="text-xs font-semibold uppercase text-slate-400 mb-1">Escandallo de Insumos</div>
+                            <div class="max-h-28 overflow-y-auto custom-scrollbar pr-1">
+                                ${ingredientsListHtml}
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-xs pt-2 border-t border-slate-100">
+                            <span class="text-slate-500">Costo Producción: <strong class="text-slate-800">$${totalCost.toFixed(2)}</strong></span>
+                            <span class="text-slate-500">Margen: <strong class="text-brand-600">${margin}%</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="bg-rose-50/50 px-5 py-3 border-t border-rose-100 flex justify-end gap-2">
+                        <button onclick="editRecipe('${recipe.id}')" class="text-xs text-blue-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50">
+                            <i class="fa-solid fa-pen"></i> Editar
+                        </button>
+                        <button onclick="deleteRecipe('${recipe.id}')" class="text-xs text-rose-600 font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50">
+                            <i class="fa-solid fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function openRecipeModal(editId = null) {
+            document.getElementById('recipeForm').reset();
+            document.getElementById('recipeId').value = '';
+            document.getElementById('recipeIngredientsRows').innerHTML = '';
+            document.getElementById('recipeModalTitle').innerText = editId ? "Editar Receta" : "Crear Nueva Receta";
+
+            if (editId) {
+                const recipe = recipes.find(r => r.id === editId);
+                if (recipe) {
+                    document.getElementById('recipeId').value = recipe.id;
+                    document.getElementById('recipeName').value = recipe.name;
+                    document.getElementById('recipeCategory').value = recipe.category || 'Tortas';
+                    document.getElementById('recipeMargin').value = recipe.margin || 100;
+
+                    recipe.ingredients.forEach(item => {
+                        addRecipeIngredientRow(item.ingredientId, item.amount);
+                    });
+                }
+            } else {
+                // Add initial empty row
+                addRecipeIngredientRow();
+            }
+
+            calculateRecipeCostSummary();
+            document.getElementById('recipeModal').classList.remove('hidden');
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipeModal').classList.add('hidden');
+        }
+
+        function addRecipeIngredientRow(selectedIngId = '', amount = '') {
+            const container = document.getElementById('recipeIngredientsRows');
+            const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 4);
+
+            const optionsHtml = ingredients.map(i => `<option value="${i.id}" ${i.id === selectedIngId ? 'selected' : ''}>${i.name} (${i.unit})</option>`).join('');
+
+            const div = document.createElement('div');
+            div.id = rowId;
+            div.className = "flex gap-2 items-center";
+            div.innerHTML = `
+                <select onchange="calculateRecipeCostSummary()" class="ing-select flex-1 text-sm bg-slate-50 border border-slate-200 rounded-xl p-2 focus:outline-none focus:border-rose-400">
+                    <option value="">-- Seleccionar Materia Prima --</option>
+                    ${optionsHtml}
+                </select>
+                <input type="number" step="0.01" value="${amount}" oninput="calculateRecipeCostSummary()" placeholder="Cantidad" class="ing-amount w-28 text-sm bg-slate-50 border border-slate-200 rounded-xl p-2 focus:outline-none focus:border-rose-400">
+                <button type="button" onclick="removeRecipeIngredientRow('${rowId}')" class="text-rose-500 hover:text-rose-700 p-2"><i class="fa-solid fa-trash-can"></i></button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeRecipeIngredientRow(rowId) {
+            const row = document.getElementById(rowId);
+            if (row) row.remove();
+            calculateRecipeCostSummary();
+        }
+
+        function calculateRecipeCostSummary() {
+            const margin = parseFloat(document.getElementById('recipeMargin').value) || 100;
+            document.getElementById('marginValueText').innerText = `${margin}%`;
+
+            let totalCost = 0;
+            const rows = document.querySelectorAll('#recipeIngredientsRows > div');
+
+            rows.forEach(row => {
+                const ingId = row.querySelector('.ing-select').value;
+                const amount = parseFloat(row.querySelector('.ing-amount').value) || 0;
+
+                if (ingId && amount > 0) {
+                    const ing = ingredients.find(i => i.id === ingId);
+                    if (ing) {
+                        totalCost += (ing.cost * amount);
+                    }
+                }
+            });
+
+            const suggestedPrice = totalCost * (1 + (margin / 100));
+
+            document.getElementById('recipeTotalCost').innerText = `$${totalCost.toFixed(2)}`;
+            document.getElementById('recipeSuggestedPrice').innerText = `$${suggestedPrice.toFixed(2)}`;
+        }
+
+        function saveRecipe(e) {
+            e.preventDefault();
+            const id = document.getElementById('recipeId').value;
+            const name = document.getElementById('recipeName').value.trim();
+            const category = document.getElementById('recipeCategory').value;
+            const margin = parseFloat(document.getElementById('recipeMargin').value);
+
+            const recipeIngredients = [];
+            const rows = document.querySelectorAll('#recipeIngredientsRows > div');
+
+            rows.forEach(row => {
+                const ingId = row.querySelector('.ing-select').value;
+                const amount = parseFloat(row.querySelector('.ing-amount').value) || 0;
+                if (ingId && amount > 0) {
+                    recipeIngredients.push({ ingredientId: ingId, amount });
+                }
+            });
+
+            if (recipeIngredients.length === 0) {
+                alert("Debes agregar al menos un ingrediente a la receta.");
+                return;
+            }
+
+            if (id) {
+                const index = recipes.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    recipes[index] = { id, name, category, margin, ingredients: recipeIngredients };
+                    showToast("Receta actualizada");
+                }
+            } else {
+                recipes.push({
+                    id: 'rec-' + Date.now(),
+                    name, category, margin, ingredients: recipeIngredients
+                });
+                showToast("Nueva receta creada");
+            }
+
+            saveState();
+            closeRecipeModal();
+            renderAll();
+        }
+
+        function deleteRecipe(id) {
+            if (confirm("¿Deseas eliminar esta receta?")) {
+                recipes = recipes.filter(r => r.id !== id);
+                saveState();
+                renderAll();
+                showToast("Receta eliminada", "danger");
+            }
+        }
+
+        function editRecipe(id) {
+            openRecipeModal(id);
+        }
+
+
+        // --- 4. SALES CONTROLLER ---
+        function updateSaleSelectOptions() {
+            const select = document.getElementById('saleRecipeSelect');
+            select.innerHTML = `<option value="">-- Selecciona un postre --</option>`;
+
+            recipes.forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.id;
+                option.innerText = r.name;
+                select.appendChild(option);
+            });
+        }
+
+        function updateSalePreview() {
+            const recipeId = document.getElementById('saleRecipeSelect').value;
+            const qty = parseInt(document.getElementById('saleQuantity').value) || 1;
+
+            if (!recipeId) {
+                document.getElementById('saleCostPreview').innerText = "$0.00";
+                document.getElementById('salePricePreview').innerText = "$0.00";
+                document.getElementById('saleProfitPreview').innerText = "$0.00";
+                return;
+            }
+
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (recipe) {
+                const { totalCost, suggestedPrice } = calculateRecipeTotals(recipe);
+                const totalCostBatch = totalCost * qty;
+                const totalPriceBatch = suggestedPrice * qty;
+                const profitBatch = totalPriceBatch - totalCostBatch;
+
+                document.getElementById('saleCostPreview').innerText = `$${totalCostBatch.toFixed(2)}`;
+                document.getElementById('salePricePreview').innerText = `$${totalPriceBatch.toFixed(2)}`;
+                document.getElementById('saleProfitPreview').innerText = `$${profitBatch.toFixed(2)}`;
+            }
+        }
+
+        function handleRegisterSale(e) {
+            e.preventDefault();
+            const recipeId = document.getElementById('saleRecipeSelect').value;
+            const qty = parseInt(document.getElementById('saleQuantity').value) || 1;
+
+            if (!recipeId || qty <= 0) return;
+
+            const recipe = recipes.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            // Check stock availability
+            const missingIngredients = [];
+            recipe.ingredients.forEach(item => {
+                const ing = ingredients.find(i => i.id === item.ingredientId);
+                const required = item.amount * qty;
+                if (!ing || ing.stock < required) {
+                    missingIngredients.push({
+                        name: ing ? ing.name : 'Desconocido',
+                        available: ing ? ing.stock : 0,
+                        required,
+                        unit: ing ? ing.unit : ''
+                    });
+                }
+            });
+
+            if (missingIngredients.length > 0) {
+                let msg = "No hay suficiente stock para preparar esta orden:\n";
+                missingIngredients.forEach(m => {
+                    msg += `- ${m.name}: Necesario ${m.required}${m.unit}, Disponible ${m.available}${m.unit}\n`;
+                });
+                alert(msg);
+                return;
+            }
+
+            // Deduct Stock
+            recipe.ingredients.forEach(item => {
+                const ing = ingredients.find(i => i.id === item.ingredientId);
+                if (ing) {
+                    ing.stock -= (item.amount * qty);
+                }
+            });
+
+            // Register Sale
+            const { totalCost, suggestedPrice } = calculateRecipeTotals(recipe);
+            const totalCostBatch = totalCost * qty;
+            const totalPriceBatch = suggestedPrice * qty;
+
+            const saleRecord = {
+                id: 'sale-' + Date.now(),
+                date: new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }),
+                recipeId: recipe.id,
+                recipeName: recipe.name,
+                quantity: qty,
+                totalCost: totalCostBatch,
+                totalPrice: totalPriceBatch,
+                profit: totalPriceBatch - totalCostBatch
+            };
+
+            sales.unshift(saleRecord); // add to top
+            saveState();
+            renderAll();
+            showToast(`¡Venta registrada! Se descontaron los insumos del stock.`);
+
+            document.getElementById('salesForm').reset();
+            updateSalePreview();
+        }
+
+        function renderSalesHistory() {
+            const tbody = document.getElementById('salesHistoryTable');
+            tbody.innerHTML = '';
+
+            if (sales.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Aún no hay ventas registradas.</td></tr>`;
+                return;
+            }
+
+            sales.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3 text-xs text-slate-500">${s.date}</td>
+                    <td class="p-3 font-semibold text-slate-800">${s.recipeName}</td>
+                    <td class="p-3 font-medium text-slate-700">${s.quantity} un.</td>
+                    <td class="p-3 text-slate-600">$${s.totalCost.toFixed(2)}</td>
+                    <td class="p-3 font-semibold text-emerald-600">$${s.totalPrice.toFixed(2)}</td>
+                    <td class="p-3 text-right font-bold text-slate-800">$${s.profit.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+
+        // --- 5. AI ANALYTICS & PREDICTION ENGINE ---
+        function runAIPredictions() {
+            const tbody = document.getElementById('aiPredictionTable');
+            tbody.innerHTML = '';
+
+            // Calculate consumption rate per recipe ingredient based on sales history
+            const ingredientUsageMap = {};
+
+            sales.forEach(s => {
+                const recipe = recipes.find(r => r.id === s.recipeId);
+                if (recipe) {
+                    recipe.ingredients.forEach(item => {
+                        const totalUsed = item.amount * s.quantity;
+                        ingredientUsageMap[item.ingredientId] = (ingredientUsageMap[item.ingredientId] || 0) + totalUsed;
+                    });
+                }
+            });
+
+            let criticalCount = 0;
+
+            ingredients.forEach(ing => {
+                const totalUsedHistorical = ingredientUsageMap[ing.id] || 0;
+                // Average consumption per sale transaction or day estimation
+                const avgConsumptionPerSale = sales.length > 0 ? (totalUsedHistorical / sales.length) : 0;
+                
+                // Days remaining calculated simulating 2 sales per day
+                const estimatedDailyUsage = avgConsumptionPerSale * 1.5 || (ing.minStock * 0.2); 
+                const daysRemaining = estimatedDailyUsage > 0 ? Math.floor(ing.stock / estimatedDailyUsage) : 99;
+
+                let priority = "Baja";
+                let priorityClass = "bg-slate-100 text-slate-600";
+                let reorderSuggest = "Stock suficiente";
+
+                if (daysRemaining <= 3 || ing.stock <= ing.minStock) {
+                    priority = "CRÍTICA";
+                    priorityClass = "bg-rose-100 text-rose-700 font-bold";
+                    const suggestAmount = (ing.minStock * 3) - ing.stock;
+                    reorderSuggest = `Comprar aprox. ${Math.max(suggestAmount, ing.minStock).toFixed(0)} ${ing.unit}`;
+                    criticalCount++;
+                } else if (daysRemaining <= 7) {
+                    priority = "Media";
+                    priorityClass = "bg-amber-100 text-amber-700 font-semibold";
+                    reorderSuggest = `Revisar pedido (${(ing.minStock * 2).toFixed(0)} ${ing.unit})`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-800">${ing.name}</td>
+                    <td class="p-3 text-slate-700">${ing.stock} ${ing.unit}</td>
+                    <td class="p-3 text-xs text-slate-500">${estimatedDailyUsage.toFixed(1)} ${ing.unit}/día est.</td>
+                    <td class="p-3 font-bold ${daysRemaining <= 3 ? 'text-rose-600' : 'text-slate-700'}">${daysRemaining > 90 ? '> 90 días' : daysRemaining + ' días'}</td>
+                    <td class="p-3"><span class="px-2.5 py-1 text-xs rounded-full ${priorityClass}">${priority}</span></td>
+                    <td class="p-3 text-right font-medium text-slate-700">${reorderSuggest}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Update AI Banner
+            const summaryText = document.getElementById('aiSummaryText');
+            const healthScore = document.getElementById('aiHealthScore');
+
+            if (criticalCount > 0) {
+                summaryText.innerText = `Atención: Se detectaron ${criticalCount} ingrediente(s) con riesgo inminente de agotarse en los próximos días.`;
+                healthScore.innerText = "Requiere Atención";
+                healthScore.className = "text-lg font-bold text-amber-200";
+            } else {
+                summaryText.innerText = `Excelente: El inventario de materias primas tiene un nivel saludable para mantener la producción activa.`;
+                healthScore.innerText = "Óptimo (100%)";
+                healthScore.className = "text-lg font-bold text-emerald-200";
+            }
+        }
+    </script>
+</body>
+</html>
